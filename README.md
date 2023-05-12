@@ -143,8 +143,7 @@ positional arguments:
 
 optional arguments:
   -h, --help            show this help message and exit
-  -v, --verbose         report file being processed (level 1), progress messages (level 2) (default: 0)
+  -v, --verbose         report file being processed (level 1), count (2), progress (3) (default: 0)
   --input-folder input  folder that contains source txt files (default: input)
   --csv-folder csv      folder to write csv files to (default: csv)
-  --output output       output file in csv format (default: None)
-```
+  --output output       output file in csv format (default: None)```
