@@ -35,6 +35,9 @@ import sys
 import argparse
 import calendar
 
+EXIT_SUCCESS = 0
+EXIT_FAILURE = 1
+
 # Line information of text file copy-pasted from Vattenfal web page with a month's electricity usage per day:
 line_month        = 27      # Note: per 11-May-2023
 line_day_first    = 31      # Note: per 11-May-2023
@@ -111,6 +114,31 @@ offset_totalekosten    = (0 ,  0)
 #
 # Method B. is used in this script.
 #
+
+def log(*args, **kwargs):
+    """Printing a log message"""
+    print(*args, file=sys.stderr, **kwargs)
+
+def eprint(*args, **kwargs):
+    """Printing an error"""
+    print(*args, file=sys.stderr, **kwargs)
+
+def wprint(*args, **kwargs):
+    """Printing a warning"""
+    print(*args, file=sys.stderr, **kwargs)
+
+def is_wildcard(path):
+    """True if path contains a wildcard"""
+    return '*' in path
+
+def plural(text, count):
+    """Return plural of text if count larger than one"""
+    return text + ('s' if count > 1 else '')
+
+def reset():
+    """Reset state for processing the next file"""
+    global line_day_current
+    line_day_current  = line_day_first
 
 def probe_teruglevering(lines, day):
     """Probe if currently selected day contains 'Terugleveren'."""
@@ -221,11 +249,15 @@ def scrape_day(lines, day, month, year):
         scrape_day_totalelekosten(lines, day),
     )
 
-def scrape(args):
+def scrape(src, args):
     """Scrape usage information from text file '{}'"""
-    src = args.file[0]
     if args.verbose > 0 :
-        print(scrape.__doc__.format(src))
+        log(scrape.__doc__.format(src))
+
+    if args.verbose > 0:
+        log(src)
+
+    reset()
 
     import codecs
     with codecs.open(src, "r", "utf-8", errors='surrogateescape') as input:
@@ -234,26 +266,26 @@ def scrape(args):
 
     year, month, days = scrape_year_month_days(lines)
     if args.verbose > 0 :
-        print('year:{} month:{} days:{}'.format(year, month, days))
+        log('year:{} month:{} days:{}'.format(year, month, days))
 
-    data = []
+    result = []
     for day in range(1, days + 1):
         # print('Day: {}'.format(lines[day_index(day)]))
-        data.append(scrape_day(lines, day, month, year))
+        result.append(scrape_day(lines, day, month, year))
         advance_day()
 
-    return data
+    return result
 
 def report_header(args):
     """Report header"""
     if args.verbose > 0 :
-        print(report_header.__doc__)
+        log(report_header.__doc__)
     print("Datum;Levering [Wh];Teruglevering [Wh];Netto Verbruik [Wh];Vaste Kosten;Variable Kosten;Totale kosten")
 
 def report_entries(args, data):
     """Report entries"""
     if args.verbose > 0 :
-        print(report_entries.__doc__)
+        log(report_entries.__doc__)
     for entry in data:
         # print(entry)
         print('{date};{levering};{terug};{netto};{vast};{variabel};{totaal}'.format(
@@ -261,17 +293,78 @@ def report_entries(args, data):
             netto=entry[3], vast=entry[4], variabel=entry[5], totaal=entry[6]))
 
 def report(args, data):
-    """Report header and day entries."""
-    if args.verbose > 0 :
-        print(report.__doc__.format(args.file[0]))
+    """Report header and day entries, return 1 (processed one file)."""
+    if args.verbose > 0:
+        log(report.__doc__.format(args.path[0]))
     report_header(args)
     report_entries(args, data)
+    return 1
+
+def scrape_and_report_file(path, args):
+    """Scrape text in specified file and create csv files of it; honours option -o, --output"""
+    # checking if it is a file
+    if os.path.isfile(path):
+        return report(args, scrape(path, args))
+    else:
+        return 0
+
+def scrape_and_report_folder(folder, args):
+    """Scrape text files in folder' and create csv files of them."""
+    count = 0
+    for filename in os.listdir(folder):
+        path = os.path.join(folder, filename)
+        if os.path.isfile(path):
+            count = count + report(args, scrape(path, args))
+    return count
+
+def scrape_and_report_wildcard(wildcard, args):
+    """Scrape text files in folder' and create csv files of them."""
+    import glob
+    count = 0
+    for path in glob.glob(wildcard):
+        if os.path.isfile(path):
+            count = count + report(args, scrape(path, args))
+    return count
 
 def scrape_and_report(args):
-    """Scrape text file '{}' and create a csv file of it."""
+    """Scrape text file(s) '{}' and create csv file(s)."""
     if args.verbose > 0 :
-        print(scrape_and_report.__doc__.format(args.file[0]))
-    report(args, scrape(args))
+        log(scrape_and_report.__doc__.format(args.path[0]))
+    count = 0
+    try:
+        for path in args.path:
+            if os.path.isfile(path):
+                count = count + scrape_and_report_file(path, args)
+            elif os.path.isdir(path):
+                count = count + scrape_and_report_folder(path, args)
+            elif not is_wildcard(path):
+                wprint("Warning: file or folder '{}' not found".format(path))
+            else:
+                count  = count + scrape_and_report_wildcard(path, args)
+    except OSError as err:
+        eprint('Error: {}'.format(err))
+    if count > 0:
+        if args.verbose > 0:
+            log('{count} {files} processed'.format(count=count, files=plural('file', count)))
+    else:
+        wprint('Warning: not a single file processed')
+
+def option_output(args):
+    """..."""
+    return args.output
+
+def has_paths(args):
+    """..."""
+    return len(args.path) > 0
+
+def multiple_files(args):
+    """..."""
+    return len(args.path) > 1 or not os.path.isfile(args.path[0])
+
+def error(text, status):
+    """..."""
+    eprint('Error: {}'.format(text))
+    return status
 
 def main():
     """Scrape given text file with Vattenfall electricity usage and create a csv file of it."""
@@ -290,31 +383,40 @@ def main():
 
     parser.add_argument(
         '--input-folder',
-        metavar='path',
+        metavar='input',
         default='input',
         type=str,
         help='folder that contains source txt files')
 
     parser.add_argument(
         '--csv-folder',
-        metavar='path',
+        metavar='csv',
         default='csv',
         type=str,
         help='folder to write csv files to')
 
     parser.add_argument(
-        'file',
-        metavar='file',
+        '--output',
+        metavar='output',
+        type=str,
+        help='output file in csv format')
+
+    parser.add_argument(
+        'path',
+        metavar='path',
         default='',
         type=str,
-        nargs=1,
-        help='file with webpage text')
+        nargs='+',
+        help='file(s) with copy-pasted web page text (file, folder, wildcard)')
 
     args = parser.parse_args()
 
     # print(args)
 
-    if len(args.file) > 0:
+    if option_output(args) and multiple_files(args):
+        return error("can only use option '--output' with a single file", EXIT_FAILURE)
+
+    if has_paths(args):
         scrape_and_report(args)
     else:
         parser.print_help()
