@@ -1,0 +1,6 @@
+# Folders
+.mypy_cache
+.vscode
+
+# Python
+*.pyc
