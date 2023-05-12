@@ -130,3 +130,21 @@ Datum;Levering [Wh];Teruglevering [Wh];Netto Verbruik [Wh];Vaste Kosten;Variable
 ## The script
 
 Currently the [script](script/scrape_electricity_per_day_vattenfall.py) assumes the desired information starts on `line_month` (27). If needed, the scraping process can be made a bit more resilient. For now, let's hope the presentation does not often change.
+
+The script's help screen:
+
+```Console
+usage: scrape_electricity_per_day_vattenfall.py [-h] [-v] [--input-folder input] [--csv-folder csv] [--output output] path [path ...]
+
+Scrape given text file with Vattenfall electricity usage and create a csv file of it.
+
+positional arguments:
+  path                  file(s) with copy-pasted web page text (file, folder, wildcard)
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -v, --verbose         report progress (level 1), the file being processed (level 2) (default: 0)
+  --input-folder input  folder that contains source txt files (default: input)
+  --csv-folder csv      folder to write csv files to (default: csv)
+  --output output       output file in csv format (default: None)
+```
