@@ -251,9 +251,8 @@ def scrape_day(lines, day, month, year):
 
 def scrape(src, args):
     """Scrape usage information from text file '{}'"""
-    if args.verbose > 0 :
+    if args.verbose > 1:
         log(scrape.__doc__.format(src))
-
     if args.verbose > 0:
         log(src)
 
@@ -265,7 +264,7 @@ def scrape(src, args):
         lines = input.read().splitlines()
 
     year, month, days = scrape_year_month_days(lines)
-    if args.verbose > 0 :
+    if args.verbose > 1:
         log('year:{} month:{} days:{}'.format(year, month, days))
 
     result = []
@@ -278,13 +277,13 @@ def scrape(src, args):
 
 def report_header(args):
     """Report header"""
-    if args.verbose > 0 :
+    if args.verbose > 1:
         log(report_header.__doc__)
     print("Datum;Levering [Wh];Teruglevering [Wh];Netto Verbruik [Wh];Vaste Kosten;Variable Kosten;Totale kosten")
 
 def report_entries(args, data):
     """Report entries"""
-    if args.verbose > 0 :
+    if args.verbose > 1:
         log(report_entries.__doc__)
     for entry in data:
         # print(entry)
@@ -294,7 +293,7 @@ def report_entries(args, data):
 
 def report(args, data):
     """Report header and day entries, return 1 (processed one file)."""
-    if args.verbose > 0:
+    if args.verbose > 1:
         log(report.__doc__.format(args.path[0]))
     report_header(args)
     report_entries(args, data)
@@ -328,7 +327,7 @@ def scrape_and_report_wildcard(wildcard, args):
 
 def scrape_and_report(args):
     """Scrape text file(s) '{}' and create csv file(s)."""
-    if args.verbose > 0 :
+    if args.verbose > 1:
         log(scrape_and_report.__doc__.format(args.path[0]))
     count = 0
     try:
@@ -344,7 +343,7 @@ def scrape_and_report(args):
     except OSError as err:
         eprint('Error: {}'.format(err))
     if count > 0:
-        if args.verbose > 0:
+        if args.verbose > 1:
             log('{count} {files} processed'.format(count=count, files=plural('file', count)))
     else:
         wprint('Warning: not a single file processed')
@@ -379,7 +378,7 @@ def main():
         '-v', '--verbose',
         action='count',
         default=0,
-        help='report progress (level 1), the file being processed (level 2)')
+        help='report file being processed (level 1), progress messages (level 2)')
 
     parser.add_argument(
         '--input-folder',
@@ -411,7 +410,7 @@ def main():
 
     args = parser.parse_args()
 
-    # print(args)
+    # log(args)
 
     if option_output(args) and multiple_files(args):
         return error("can only use option '--output' with a single file", EXIT_FAILURE)
