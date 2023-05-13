@@ -325,7 +325,7 @@ def scrape_and_report_folder(folder, args):
     for filename in os.listdir(folder):
         path = os.path.join(folder, filename)
         if os.path.isfile(path):
-            log(LOG_PROGRESS, args, 'Creating {}'.format(to_output_path(args, path)))
+            log(LOG_PROGRESS, args, "Creating '{}'".format(to_output_path(args, path)))
             with open(to_output_path(args, path), 'w') as output:
                 count = count + report(args, scrape(path, args), output)
     return count
@@ -336,7 +336,7 @@ def scrape_and_report_wildcard(wildcard, args):
     count = 0
     for path in glob.glob(wildcard):
         if os.path.isfile(path):
-            log(LOG_PROGRESS, args, 'Creating {}'.format(to_output_path(args, path)))
+            log(LOG_PROGRESS, args, "Creating '{}'".format(to_output_path(args, path)))
             with open(to_output_path(args, path), 'w') as output:
                 count = count + report(args, scrape(path, args), output)
     return count
