@@ -13,19 +13,20 @@
 # - Python standard library.
 #
 # Process:
-# 1. ...
+# 1. Handle command line options: output file, output folder, log level
+# 2. Iterate over one or more files, folders, or wildcard-specified files
+# 3. For each file, scrape its content, write out the CSV to a file (stdout for single file, and no --output option)
 #
-# Folders used/created:
-# - ...
+# Folders used:
+# - Folders that are part of files to be read.
+# - Command line specified --output: folder of path specified (if any) must exist.
+# - Command line specified --csv-folder: must exists when specified.
 #
 # Output:
 # - Fields separated by ';'.
 # - Energy in Wh without ',' or '.'.
 # - Money in €, using '.' as separator, such as '-2.15' (optionally as '€ -2.15', see to_money()).
 #
-
-# TODO: Process multiple text files, reading an 'input' folder, writing to a 'csv' folder.
-# TODO: Add option '-o output.csv' to direct output to an output file for a single text input file.
 
 from __future__ import print_function
 
