@@ -136,7 +136,9 @@ The script's help screen:
 ```Console
 usage: scrape_electricity_per_day_vattenfall.py [-h] [-v] [--csv-folder csv] [--output output] paths [paths ...]
 
-Scrape given text file with Vattenfall electricity usage and create a csv file of it.
+Scrape given text file(s) with Vattenfall daily electricity usage and create file(s) in csv format. Single file output is to stdout default and can
+be directed to a file using option '--output'. When multiple files are specified, output is to a file of the same name with the extension replaced
+with '.csv'. Multiple file output can be directed to a folder using option '--csv-folder'.
 
 positional arguments:
   paths             file(s) with copy-pasted web page text (file, folder, wildcard)

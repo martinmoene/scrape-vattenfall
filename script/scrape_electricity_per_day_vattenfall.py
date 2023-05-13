@@ -380,10 +380,14 @@ def error(text, status):
     return status
 
 def main():
-    """Scrape given text file with Vattenfall electricity usage and create a csv file of it."""
+    """Scrape given text file(s) with Vattenfall daily electricity usage and create a csv file of it."""
 
     parser = argparse.ArgumentParser(
-        description='Scrape given text file with Vattenfall electricity usage and create a csv file of it.',
+        description="""Scrape given text file(s) with Vattenfall daily electricity usage and create file(s) in csv format.
+Single file output is to stdout default and can be directed to a file using option '--output'.
+When multiple files are specified, output is to a file of the same name with the extension replaced with '.csv'.
+Multiple file output can be directed to a folder using option '--csv-folder'.
+""",
         epilog="""""",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 #        formatter_class=argparse.RawTextHelpFormatter)
