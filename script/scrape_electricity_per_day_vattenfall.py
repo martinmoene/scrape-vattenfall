@@ -256,7 +256,7 @@ def scrape_day(lines, day, month, year):
     )
 
 def scrape(src, args):
-    """Scrape usage information from text file '{}'"""
+    """Scrape usage information from text file '{}'."""
     log(LOG_PROGRESS, args, scrape.__doc__.format(src))
     log(LOG_FILENAME, args, src)
 
@@ -279,12 +279,12 @@ def scrape(src, args):
     return result
 
 def report_header(args, output):
-    """Report header"""
+    """Report header."""
     log(LOG_PROGRESS, args, report_header.__doc__)
     print("Datum;Levering [Wh];Teruglevering [Wh];Netto Verbruik [Wh];Vaste Kosten;Variable Kosten;Totale kosten", file=output)
 
 def report_entries(args, data, output):
-    """Report entries"""
+    """Report entries."""
     log(LOG_PROGRESS, args, report_entries.__doc__)
     for entry in data:
         # eprint(entry)
@@ -326,7 +326,7 @@ def scrape_and_report_folder(folder, args):
     for filename in os.listdir(folder):
         path = os.path.join(folder, filename)
         if os.path.isfile(path):
-            log(LOG_PROGRESS, args, "Creating '{}'".format(to_output_path(args, path)))
+            log(LOG_PROGRESS, args, "Creating '{}'.".format(to_output_path(args, path)))
             with open(to_output_path(args, path), 'w') as output:
                 count = count + report(args, scrape(path, args), output)
     return count
@@ -337,7 +337,7 @@ def scrape_and_report_wildcard(wildcard, args):
     count = 0
     for path in glob.glob(wildcard):
         if os.path.isfile(path):
-            log(LOG_PROGRESS, args, "Creating '{}'".format(to_output_path(args, path)))
+            log(LOG_PROGRESS, args, "Creating '{}'.".format(to_output_path(args, path)))
             with open(to_output_path(args, path), 'w') as output:
                 count = count + report(args, scrape(path, args), output)
     return count
@@ -353,15 +353,15 @@ def scrape_and_report(args, output):
             elif os.path.isdir(path):
                 count = count + scrape_and_report_folder(path, args)
             elif not is_wildcard(path):
-                wprint("Warning: file or folder '{}' not found".format(path))
+                wprint("Warning: file or folder '{}' not found.".format(path))
             else:
                 count = count + scrape_and_report_wildcard(path, args)
     except OSError as err:
         eprint('Error: {}'.format(err))
     if count > 0:
-        log(LOG_PROCESSED, args, '{count} {files} processed'.format(count=count, files=plural('file', count)))
+        log(LOG_PROCESSED, args, '{count} {files} processed.'.format(count=count, files=plural('file', count)))
     else:
-        wprint('Warning: not a single file processed')
+        wprint('Warning: not a single file processed.')
 
 def option_output(args):
     """..."""
@@ -432,7 +432,7 @@ Multiple file output can be directed to a folder using option '--csv-folder'.
     # eprint(args)
 
     if option_output(args) and multiple_files(args):
-        return error("can only use option '--output' with a single file", EXIT_FAILURE)
+        return error("can only use option '--output' with a single file.", EXIT_FAILURE)
 
     if has_paths(args):
         if option_output(args):
