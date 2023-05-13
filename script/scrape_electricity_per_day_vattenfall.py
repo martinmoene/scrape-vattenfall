@@ -38,6 +38,10 @@ import calendar
 EXIT_SUCCESS = 0
 EXIT_FAILURE = 1
 
+LOG_FILENAME  = 1
+LOG_PROCESSED = 2
+LOG_PROGRESS  = 3
+
 # Line information of text file copy-pasted from Vattenfal web page with a month's electricity usage per day:
 line_month        = 27      # Note: per 11-May-2023
 line_day_first    = 31      # Note: per 11-May-2023
@@ -115,9 +119,10 @@ offset_totalekosten    = (0 ,  0)
 # Method B. is used in this script.
 #
 
-def log(*args, **kwargs):
-    """Print a log message"""
-    print(*args, file=sys.stderr, **kwargs)
+def log(level, cmdargs, *args, **kwargs):
+    """Print a log message, depending on its verbosity level"""
+    if cmdargs.verbose >= level:
+        print(*args, file=sys.stderr, **kwargs)
 
 def eprint(*args, **kwargs):
     """Print an error"""
@@ -251,10 +256,8 @@ def scrape_day(lines, day, month, year):
 
 def scrape(src, args):
     """Scrape usage information from text file '{}'"""
-    if args.verbose > 2:
-        log(scrape.__doc__.format(src))
-    if args.verbose > 0:
-        log(src)
+    log(LOG_PROGRESS, args, scrape.__doc__.format(src))
+    log(LOG_FILENAME, args, src)
 
     reset()
 
@@ -264,8 +267,7 @@ def scrape(src, args):
         lines = input.read().splitlines()
 
     year, month, days = scrape_year_month_days(lines)
-    if args.verbose > 2:
-        log('year:{} month:{} days:{}'.format(year, month, days))
+    log(LOG_PROGRESS, args, 'year:{} month:{} days:{}'.format(year, month, days))
 
     result = []
     for day in range(1, days + 1):
@@ -277,14 +279,12 @@ def scrape(src, args):
 
 def report_header(args):
     """Report header"""
-    if args.verbose > 2:
-        log(report_header.__doc__)
+    log(LOG_PROGRESS, args, report_header.__doc__)
     print("Datum;Levering [Wh];Teruglevering [Wh];Netto Verbruik [Wh];Vaste Kosten;Variable Kosten;Totale kosten")
 
 def report_entries(args, data):
     """Report entries"""
-    if args.verbose > 2:
-        log(report_entries.__doc__)
+    log(LOG_PROGRESS, args, report_entries.__doc__)
     for entry in data:
         # print(entry)
         print('{date};{levering};{terug};{netto};{vast};{variabel};{totaal}'.format(
@@ -293,8 +293,7 @@ def report_entries(args, data):
 
 def report(args, data):
     """Report header and day entries, return 1 (processed one file)."""
-    if args.verbose > 2:
-        log(report.__doc__.format(args.paths[0]))
+    log(LOG_PROGRESS, args, report.__doc__.format(args.paths[0]))
     report_header(args)
     report_entries(args, data)
     return 1
@@ -326,8 +325,7 @@ def scrape_and_report_wildcard(wildcard, args):
 
 def scrape_and_report(args):
     """Scrape text file(s) '{}' and create csv file(s)."""
-    if args.verbose > 2:
-        log(scrape_and_report.__doc__.format(args.paths[0]))
+    log(LOG_PROGRESS, args, scrape_and_report.__doc__.format(args.paths[0]))
     count = 0
     try:
         for path in args.paths:
@@ -342,8 +340,7 @@ def scrape_and_report(args):
     except OSError as err:
         eprint('Error: {}'.format(err))
     if count > 0:
-        if args.verbose > 1:
-            log('{count} {files} processed'.format(count=count, files=plural('file', count)))
+        log(LOG_PROCESSED, args, '{count} {files} processed'.format(count=count, files=plural('file', count)))
     else:
         wprint('Warning: not a single file processed')
 
