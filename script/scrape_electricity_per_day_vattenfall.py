@@ -129,7 +129,7 @@ def wprint(*args, **kwargs):
 
 def is_wildcard(path):
     """True if path contains a wildcard"""
-    return '*' in path
+    return '*' in path or '?' in path
 
 def plural(text, count):
     """Return plural of text if count larger than one"""
@@ -301,7 +301,6 @@ def report(args, data):
 
 def scrape_and_report_file(path, args):
     """Scrape text in specified file and create csv files of it; honours option -o, --output"""
-    # checking if it is a file
     if os.path.isfile(path):
         return report(args, scrape(path, args))
     else:
@@ -339,7 +338,7 @@ def scrape_and_report(args):
             elif not is_wildcard(path):
                 wprint("Warning: file or folder '{}' not found".format(path))
             else:
-                count  = count + scrape_and_report_wildcard(path, args)
+                count = count + scrape_and_report_wildcard(path, args)
     except OSError as err:
         eprint('Error: {}'.format(err))
     if count > 0:
