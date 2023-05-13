@@ -277,31 +277,31 @@ def scrape(src, args):
 
     return result
 
-def report_header(args):
+def report_header(args, output):
     """Report header"""
     log(LOG_PROGRESS, args, report_header.__doc__)
-    print("Datum;Levering [Wh];Teruglevering [Wh];Netto Verbruik [Wh];Vaste Kosten;Variable Kosten;Totale kosten")
+    print("Datum;Levering [Wh];Teruglevering [Wh];Netto Verbruik [Wh];Vaste Kosten;Variable Kosten;Totale kosten", file=output)
 
-def report_entries(args, data):
+def report_entries(args, data, output):
     """Report entries"""
     log(LOG_PROGRESS, args, report_entries.__doc__)
     for entry in data:
         # print(entry)
         print('{date};{levering};{terug};{netto};{vast};{variabel};{totaal}'.format(
-            date=entry[0], levering=entry[1], terug=entry[2],
-            netto=entry[3], vast=entry[4], variabel=entry[5], totaal=entry[6]))
+            date=entry[0], levering=entry[1], terug=entry[2], netto=entry[3],
+            vast=entry[4], variabel=entry[5], totaal=entry[6]), file=output)
 
-def report(args, data):
+def report(args, data, output):
     """Report header and day entries, return 1 (processed one file)."""
     log(LOG_PROGRESS, args, report.__doc__.format(args.paths[0]))
-    report_header(args)
-    report_entries(args, data)
+    report_header(args, output)
+    report_entries(args, data, output)
     return 1
 
-def scrape_and_report_file(path, args):
+def scrape_and_report_file(path, args, output):
     """Scrape text in specified file and create csv files of it; honours option -o, --output"""
     if os.path.isfile(path):
-        return report(args, scrape(path, args))
+        return report(args, scrape(path, args), output)
     else:
         return 0
 
@@ -311,7 +311,7 @@ def scrape_and_report_folder(folder, args):
     for filename in os.listdir(folder):
         path = os.path.join(folder, filename)
         if os.path.isfile(path):
-            count = count + report(args, scrape(path, args))
+            count = count + report(args, scrape(path, args), sys.stdout)
     return count
 
 def scrape_and_report_wildcard(wildcard, args):
@@ -320,17 +320,17 @@ def scrape_and_report_wildcard(wildcard, args):
     count = 0
     for path in glob.glob(wildcard):
         if os.path.isfile(path):
-            count = count + report(args, scrape(path, args))
+            count = count + report(args, scrape(path, args), sys.stdout)
     return count
 
-def scrape_and_report(args):
+def scrape_and_report(args, output):
     """Scrape text file(s) '{}' and create csv file(s)."""
     log(LOG_PROGRESS, args, scrape_and_report.__doc__.format(args.paths[0]))
     count = 0
     try:
         for path in args.paths:
             if os.path.isfile(path):
-                count = count + scrape_and_report_file(path, args)
+                count = count + scrape_and_report_file(path, args, output)
             elif os.path.isdir(path):
                 count = count + scrape_and_report_folder(path, args)
             elif not is_wildcard(path):
@@ -412,7 +412,11 @@ def main():
         return error("can only use option '--output' with a single file", EXIT_FAILURE)
 
     if has_paths(args):
-        scrape_and_report(args)
+        if option_output(args):
+            with open(args.output, 'w') as file:
+                scrape_and_report(args, file)
+        else:
+            scrape_and_report(args, sys.stdout)
     else:
         parser.print_help()
 
