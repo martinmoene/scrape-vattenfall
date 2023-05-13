@@ -134,17 +134,16 @@ Currently the [script](script/scrape_electricity_per_day_vattenfall.py) assumes 
 The script's help screen:
 
 ```Console
-usage: scrape_electricity_per_day_vattenfall.py [-h] [-v] [--input-folder input] [--csv-folder csv] [--output output] paths [paths ...]
+usage: scrape_electricity_per_day_vattenfall.py [-h] [-v] [--csv-folder csv] [--output output] paths [paths ...]
 
 Scrape given text file with Vattenfall electricity usage and create a csv file of it.
 
 positional arguments:
-  paths                 file(s) with copy-pasted web page text (file, folder, wildcard)
+  paths             file(s) with copy-pasted web page text (file, folder, wildcard)
 
 optional arguments:
-  -h, --help            show this help message and exit
-  -v, --verbose         report file being processed (level 1), count (2), progress (3) (default: 0)
-  --input-folder input  folder that contains source txt files (default: input)
-  --csv-folder csv      folder to write csv files to (default: csv)
-  --output output       output file in csv format (default: None)
-  ```
+  -h, --help        show this help message and exit
+  -v, --verbose     report file being processed (level 1), count (2), progress (3) (default: 0)
+  --csv-folder csv  folder to write csv files to (default: None)
+  --output output   output file in csv format (default: None)
+```
