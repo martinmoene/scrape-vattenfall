@@ -147,7 +147,7 @@ def reset():
 
 def probe_teruglevering(lines, day):
     """Probe if currently selected day contains 'Terugleveren'."""
-    # print('Probe teruglevering: {}'.format(lines[day_index(day) + offset_teruglevering_text]))
+    # eprint('Probe teruglevering: {}'.format(lines[day_index(day) + offset_teruglevering_text]))
     return text_teruglevering in lines[day_index(day) + offset_teruglevering_text]
 
 def determine_if_day_with_teruglevering(lines, day):
@@ -186,7 +186,7 @@ def scrape_year_month_days(lines):
         'Jul', 'Aug', 'Sep',
         'Okt', 'Nov', 'Dec',
     )
-    # print(lines[month_index()].split())
+    # eprint(lines[month_index()].split())
     month, year = lines[month_index()].split()
     yyyy = int(year)
     mm   = months.index(month)
@@ -243,7 +243,7 @@ def scrape_day_totalelekosten(lines, day):
 def scrape_day(lines, day, month, year):
     """Scrape information for a single day."""
     determine_if_day_with_teruglevering(lines, day)
-    # print('with_teruglevering:{}'.format(with_teruglevering))
+    # eprint('with_teruglevering:{}'.format(with_teruglevering))
     return (
         to_date(year, month, scrape_day_datum(lines, day)),
         scrape_day_levering(lines, day),
@@ -271,7 +271,7 @@ def scrape(src, args):
 
     result = []
     for day in range(1, days + 1):
-        # print('Day: {}'.format(lines[day_index(day)]))
+        # eprint('Day: {}'.format(lines[day_index(day)]))
         result.append(scrape_day(lines, day, month, year))
         advance_day()
 
@@ -286,7 +286,7 @@ def report_entries(args, data, output):
     """Report entries"""
     log(LOG_PROGRESS, args, report_entries.__doc__)
     for entry in data:
-        # print(entry)
+        # eprint(entry)
         print('{date};{levering};{terug};{netto};{vast};{variabel};{totaal}'.format(
             date=entry[0], levering=entry[1], terug=entry[2], netto=entry[3],
             vast=entry[4], variabel=entry[5], totaal=entry[6]), file=output)
@@ -406,7 +406,7 @@ def main():
 
     args = parser.parse_args()
 
-    # log(args)
+    # eprint(args)
 
     if option_output(args) and multiple_files(args):
         return error("can only use option '--output' with a single file", EXIT_FAILURE)
