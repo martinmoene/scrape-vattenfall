@@ -298,6 +298,20 @@ def report(args, data, output):
     report_entries(args, data, output)
     return 1
 
+def to_extension(path, ext):
+    """Return path with extension replaced by ext."""
+    return os.path.splitext(path)[0] + ext
+
+def to_output_path(args, path):
+    """Generate path for CSV output file based taking output folder from option '--csv-folder' into account"""
+    # Two cases, depending on whether output folder is not specified on command line:
+    # - is not specified: replace extension '.txt'. with '.csv;
+    # - is specified: replace extension '.txt'. with '.csv and replace folder with provided one.
+    if args.csv_folder:
+        return os.path.join(args.csv_folder, to_extension(os.path.basename(path), '.csv'))
+    else:
+        return to_extension(path, '.csv')
+
 def scrape_and_report_file(path, args, output):
     """Scrape text in specified file and create csv files of it; honours option -o, --output"""
     if os.path.isfile(path):
@@ -311,7 +325,9 @@ def scrape_and_report_folder(folder, args):
     for filename in os.listdir(folder):
         path = os.path.join(folder, filename)
         if os.path.isfile(path):
-            count = count + report(args, scrape(path, args), sys.stdout)
+            log(LOG_PROGRESS, args, 'Creating {}'.format(to_output_path(args, path)))
+            with open(to_output_path(args, path), 'w') as output:
+                count = count + report(args, scrape(path, args), output)
     return count
 
 def scrape_and_report_wildcard(wildcard, args):
@@ -320,7 +336,9 @@ def scrape_and_report_wildcard(wildcard, args):
     count = 0
     for path in glob.glob(wildcard):
         if os.path.isfile(path):
-            count = count + report(args, scrape(path, args), sys.stdout)
+            log(LOG_PROGRESS, args, 'Creating {}'.format(to_output_path(args, path)))
+            with open(to_output_path(args, path), 'w') as output:
+                count = count + report(args, scrape(path, args), output)
     return count
 
 def scrape_and_report(args, output):
@@ -376,17 +394,17 @@ def main():
         default=0,
         help='report file being processed (level 1), count (2), progress (3)')
 
-    parser.add_argument(
-        '--input-folder',
-        metavar='input',
-        default='input',
-        type=str,
-        help='folder that contains source txt files')
+    # parser.add_argument(
+    #     '--input-folder',
+    #     metavar='input',
+    #     default=None,
+    #     type=str,
+    #     help='folder that contains source txt files')
 
     parser.add_argument(
         '--csv-folder',
         metavar='csv',
-        default='csv',
+        default=None,
         type=str,
         help='folder to write csv files to')
 
