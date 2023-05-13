@@ -305,7 +305,7 @@ def to_extension(path, ext):
 
 def to_output_path(args, path):
     """Generate path for CSV output file based taking output folder from option '--csv-folder' into account"""
-    # Two cases, depending on whether output folder is not specified on command line:
+    # Two cases, depending on whether output folder is specified on command line:
     # - is not specified: replace extension '.txt'. with '.csv;
     # - is specified: replace extension '.txt'. with '.csv and replace folder with provided one.
     if args.csv_folder:
