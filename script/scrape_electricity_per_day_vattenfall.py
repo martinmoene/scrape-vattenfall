@@ -436,8 +436,8 @@ Multiple file output can be directed to a folder using option '--csv-folder'.
 
     if has_paths(args):
         if option_output(args):
-            with open(args.output, 'w') as file:
-                scrape_and_report(args, file)
+            with open(args.output, 'w') as output:
+                scrape_and_report(args, output)
         else:
             scrape_and_report(args, sys.stdout)
     else:
