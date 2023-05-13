@@ -116,15 +116,15 @@ offset_totalekosten    = (0 ,  0)
 #
 
 def log(*args, **kwargs):
-    """Printing a log message"""
+    """Print a log message"""
     print(*args, file=sys.stderr, **kwargs)
 
 def eprint(*args, **kwargs):
-    """Printing an error"""
+    """Print an error"""
     print(*args, file=sys.stderr, **kwargs)
 
 def wprint(*args, **kwargs):
-    """Printing a warning"""
+    """Print a warning"""
     print(*args, file=sys.stderr, **kwargs)
 
 def is_wildcard(path):
@@ -294,7 +294,7 @@ def report_entries(args, data):
 def report(args, data):
     """Report header and day entries, return 1 (processed one file)."""
     if args.verbose > 2:
-        log(report.__doc__.format(args.path[0]))
+        log(report.__doc__.format(args.paths[0]))
     report_header(args)
     report_entries(args, data)
     return 1
@@ -327,10 +327,10 @@ def scrape_and_report_wildcard(wildcard, args):
 def scrape_and_report(args):
     """Scrape text file(s) '{}' and create csv file(s)."""
     if args.verbose > 2:
-        log(scrape_and_report.__doc__.format(args.path[0]))
+        log(scrape_and_report.__doc__.format(args.paths[0]))
     count = 0
     try:
-        for path in args.path:
+        for path in args.paths:
             if os.path.isfile(path):
                 count = count + scrape_and_report_file(path, args)
             elif os.path.isdir(path):
@@ -353,11 +353,11 @@ def option_output(args):
 
 def has_paths(args):
     """..."""
-    return len(args.path) > 0
+    return len(args.paths) > 0
 
 def multiple_files(args):
     """..."""
-    return len(args.path) > 1 or not os.path.isfile(args.path[0])
+    return len(args.paths) > 1 or not os.path.isfile(args.paths[0])
 
 def error(text, status):
     """..."""
@@ -400,8 +400,8 @@ def main():
         help='output file in csv format')
 
     parser.add_argument(
-        'path',
-        metavar='path',
+        'paths',
+        metavar='paths',
         default='',
         type=str,
         nargs='+',
