@@ -1,0 +1,6 @@
+# Configuration file for EditorConfig, see https://EditorConfig.org
+
+# Ada files: indent by tab, present two positions
+[*.{ads,adb}]
+indent_size = 2
+indent_style = tab
