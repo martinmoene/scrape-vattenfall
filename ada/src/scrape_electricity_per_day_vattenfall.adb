@@ -51,11 +51,11 @@ procedure scrape_electricity_per_day_vattenfall is
 
 	function strip(text: in String; front: in String) return String is
 	begin
-		if starts_with(text, front) then
-			return To_String(Tail(To_Unbounded_String(text), text'Length - front'Length ));
-		else
-			return text;
-		end if;
+		return (
+			if starts_with(text, front)
+				then To_String(Tail(To_Unbounded_String(text), text'Length - front'Length ))
+				else text
+		);
   end strip;
 
 begin
