@@ -12,7 +12,7 @@ project Scrape_Electricity_Per_Day_Vattenfall is
    for Main use ("scrape_electricity_per_day_vattenfall.adb");
 
    package Compiler is
-      for Default_Switches ("ada") use ("-O1", "-gnat12");
+      for Default_Switches ("ada") use ("-O1", "-gnat12", "-gnatwa"); -- "-gnatwae"
    end Compiler;
 
    for Exec_Dir use "../bin";
