@@ -145,6 +145,11 @@ procedure scrape_electricity_per_day_vattenfall is
 		IO.Put_Line("- output    :" & has_output(opts)'Img     & " / " & To_String(opts.output));
 	end print_options;
 
+	function make_option_pair(arg: in String) return String_Pair is
+	begin
+		return (if starts_with(arg, "-") then (if contains(arg, "=") then split(arg, "=") else make_pair(arg, "")) else make_pair("", ""));
+	end make_option_pair;
+
 	opts : Options;
 
 begin
@@ -155,7 +160,7 @@ begin
 	for i in 1 .. CLI.Argument_Count loop
 		declare
 			arg      : constant String           := CLI.Argument(i);
-			opt      : constant String_Pair      := (if starts_with(arg, "-") then (if contains(arg, "=") then split(arg, "=") else make_pair(arg, "")) else make_pair("", ""));
+			opt      : constant String_Pair      := make_option_pair(arg);
 			opt_name : constant String           := To_String(opt.a);
 			opt_value: constant Unbounded_String := opt.b;
 		begin
