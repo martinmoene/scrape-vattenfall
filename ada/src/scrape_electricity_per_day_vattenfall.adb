@@ -9,24 +9,27 @@
 
 --  Milestones:
 --
---  - [ ] Provide general command line handling, https://en.wikibooks.org/wiki/Ada_Programming/Libraries/Ada.Command_Line
---    - [x] differentiate between options and positional arguments
---    - [x] split options into name, value
---    - [x] collect options in a record
---    - [ ] collect positional arguments in an array
+--  - [x] Provide general command line handling, https://en.wikibooks.org/wiki/Ada_Programming/Libraries/Ada.Command_Line
+--    - [x] differentiate between options and positional arguments.
+--    - [x] split options into name, value.
+--    - [x] collect options in a record.
+--    - [x] collect positional arguments in a vector.
 --  - [ ] Read fixed text file, write to stdout, line by line.
 --  - [ ] Read fixed text file, store in array of lines, write to stdout, line by line.
---  - [ ] Obtain filename from command line
---  - [ ] Provide path operations
---    - [ ] get basename
---    - [ ] replace extension
---    - [ ] join path elements
+--  - [ ] Obtain filename from command line.
+--  - [ ] Provide path operations:
+--    - [ ] get basename.
+--    - [ ] replace extension.
+--    - [ ] join path elements.
 
 with Ada.Text_IO;
 with Ada.Command_Line;
 with Ada.Strings; use Ada.Strings;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Ada.Strings.Unbounded.Text_IO;
+
+with Ada.Containers; use Ada.Containers;
+with Ada.Containers.Vectors;
 
 procedure scrape_electricity_per_day_vattenfall is
 	package IO   renames Ada.Text_IO;
@@ -65,6 +68,11 @@ procedure scrape_electricity_per_day_vattenfall is
 	begin
 		return Length(opts.output) > 0;
 	end has_output;
+
+	--
+	-- Positional arguments:
+	--
+	package Positional_Arguments is new Ada.Containers.Vectors(Index_Type => Natural, Element_Type => Unbounded_String);
 
 	--
 	-- Convenience string functions:
@@ -150,7 +158,16 @@ procedure scrape_electricity_per_day_vattenfall is
 		return (if starts_with(arg, "-") then (if contains(arg, "=") then split(arg, "=") else make_pair(arg, "")) else make_pair("", ""));
 	end make_option_pair;
 
+	procedure print_arguments( args: in Positional_Arguments.Vector) is
+	begin
+		IO.Put_Line("Positional arguments:");
+		for arg of args loop
+			IO.Put_Line ("- " & To_String(arg));
+		end loop;
+end print_arguments;
+
 	opts : Options;
+	args : Positional_Arguments.Vector;
 
 begin
 	print_command;
@@ -175,8 +192,10 @@ begin
 				end if;
 			else
 				print_positional(arg);
+				args.Append(To_Unbounded_String(arg));
 			end if;
 		end;
 	end loop;
 	print_options(opts);
+	print_arguments(args);
 end scrape_electricity_per_day_vattenfall;
