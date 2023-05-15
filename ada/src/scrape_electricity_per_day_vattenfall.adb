@@ -1,4 +1,4 @@
--- Note: 'Hello, World!' placeholder for now to setup Ada environment using GNAT toolset.
+-- Note: Growing functionality.
 --
 -- Scrape given text file with Vattenfall per-day electricity usage for its entries and create a csv file of it.
 --
@@ -12,7 +12,7 @@
 --  - [ ] Provide general command line handling, https://en.wikibooks.org/wiki/Ada_Programming/Libraries/Ada.Command_Line
 --    - [x] differentiate between options and positional arguments
 --    - [x] split options into name, value
---    - [ ] collect options in a record
+--    - [x] collect options in a record
 --    - [ ] collect positional arguments in an array
 --  - [ ] Read fixed text file, write to stdout, line by line.
 --  - [ ] Read fixed text file, store in array of lines, write to stdout, line by line.
@@ -29,24 +29,46 @@ with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Ada.Strings.Unbounded.Text_IO;
 
 procedure scrape_electricity_per_day_vattenfall is
-	package IO renames Ada.Text_IO;
+	package IO   renames Ada.Text_IO;
 	package UBIO renames Ada.Strings.Unbounded.Text_IO;
-	package CLI renames Ada.Command_Line;
+	package CLI  renames Ada.Command_Line;
 
+	--
+	-- Pair of unbounded strings to hold command line option/value pairs:
+	--
 	type String_Pair is record
 		a: Unbounded_String;
 		b: Unbounded_String;
 	end record;
 
+	function make_pair(a: in String; b: in String) return String_Pair is
+	begin
+		return (To_Unbounded_String(a), To_Unbounded_String(b));
+	end make_pair;
+
+	--
+	-- Option flags and values:
+	--
 	type Options is record
 		help           : Boolean := False;		-- -h, --help
-		verbose        : Integer := 0;				-- -v, --verbose
-		csv_folder_flag: Boolean := False;		-- --csv_folder flag
+		verbose        : Natural := 0;				-- -v, --verbose
 		csv_folder     : Unbounded_String;		-- --csv_folder=csv
-		output_flag    : Boolean := False;		-- --output flag
 		output         : Unbounded_String;		-- --output=output
 	end record;
 
+	function has_csv_folder(opts: in Options) return Boolean is
+	begin
+		return Length(opts.csv_folder) > 0;
+	end has_csv_folder;
+
+	function has_output(opts: in Options) return Boolean is
+	begin
+		return Length(opts.output) > 0;
+	end has_output;
+
+	--
+	-- Convenience string functions:
+	--
 	function split_at(text: in String; pos: in Integer) return String_Pair is
 	begin
 		return (To_Unbounded_String(text(text'First .. pos - 1)), To_Unbounded_String(text(pos + 1 .. text'Last)));
@@ -76,46 +98,80 @@ procedure scrape_electricity_per_day_vattenfall is
 		);
   end strip;
 
+	--
+	-- Main program:
+	--
+	procedure error(text: in String) is
+	begin
+		raise PROGRAM_ERROR with "Error: " & text;
+	end error;
+
+	procedure warning(text: in String) is
+	begin
+		IO.Put_Line("Warning: " & text);
+	end warning;
+
+	procedure print_command is
+	begin
+		IO.Put_Line ("Command Name: " & CLI.Command_Name);
+	end print_command;
+
+	procedure print_argc is
+	begin
+		IO.Put_Line ("Argument Count:" & CLI.Argument_Count'Img);
+	end print_argc;
+
+	procedure print_list_num(i: in Natural) is
+	begin
+			IO.Put(i'Img & ": ");
+	end print_list_num;
+
+	procedure print_option( option: in String; name: in String; value: in Unbounded_String) is
+	begin
+				IO.Put("option: " & option & ": "); UBIO.Put_Line(name & "/" & value);
+	end print_option;
+
+	procedure print_positional( arg: in String) is
+	begin
+		IO.Put_Line("positional: " & arg);
+	end print_positional;
+
+	procedure print_options( opts: in Options) is
+	begin
+		IO.Put_Line("Options:");
+		IO.Put_Line("- help      :" & opts.help'Img);
+		IO.Put_Line("- verbose   :" & opts.verbose'Img);
+		IO.Put_Line("- csv-folder:" & has_csv_folder(opts)'Img & " / " & To_String(opts.csv_folder));
+		IO.Put_Line("- output    :" & has_output(opts)'Img     & " / " & To_String(opts.output));
+	end print_options;
+
 	opts : Options;
-	empty_pair : constant String_Pair := (To_Unbounded_String(""), To_Unbounded_String(""));
 
 begin
-	IO.Put_Line ("Command Name: " & CLI.Command_Name);
-	IO.Put_Line ("Argument Count:" & CLI.Argument_Count'Img);
+	print_command;
+	print_argc;
 
-	--  handle options and positional arguments:
+	-- handle options and positional arguments:
 	for i in 1 .. CLI.Argument_Count loop
 		declare
-			arg : constant String      := CLI.Argument(i);
-			opt : constant String_Pair := (if starts_with(arg, "--") then split(strip(arg, "--"), "=") else empty_pair);
+			arg      : constant String           := CLI.Argument(i);
+			opt      : constant String_Pair      := (if starts_with(arg, "-") then (if contains(arg, "=") then split(arg, "=") else make_pair(arg, "")) else make_pair("", ""));
+			opt_name : constant String           := To_String(opt.a);
+			opt_value: constant Unbounded_String := opt.b;
 		begin
-			IO.Put(i'Img & ": ");
-			if starts_with(arg, "--") then
-				IO.Put("option: " & arg & ": "); UBIO.Put_Line(opt.a & "/" & opt.b);
-				--  '--option=value':
-				if contains(arg, "=") then
-					if "csv-folder" in To_String(opt.a) then
-						opts.csv_folder_flag := True;
-						opts.csv_folder      := opt.b;
-					end if;
-					if "output" in To_String(opt.a) then
-						opts.output_flag := True;
-						opts.output      := opt.b;
-					end if;
-				else	-- '--option' without value:
-					if    arg = "--help"    then opts.help := True;
-					elsif arg = "--verbose" then opts.verbose := opts.verbose + 1;
-					else  IO.Put_Line("Unrecognised option '" & arg & "'.");
-					end if;
+			print_list_num(i);
+			if starts_with(arg, "-") then
+				print_option(arg, opt_name, opt_value);
+				if    "--csv-folder" = opt_name then opts.csv_folder := opt_value;
+				elsif "--output"     = opt_name then opts.output     := opt_value;
+				elsif "--help"       = opt_name or "-h" = opt_name then opts.help    := True;
+				elsif "--verbose"    = opt_name or "-v" = opt_name then opts.verbose := opts.verbose + 1;
+				else  error("unrecognised option '" & arg & "'.");
 				end if;
 			else
-				IO.Put_Line("positional: " & arg & ": ");
+				print_positional(arg);
 			end if;
 		end;
 	end loop;
-	IO.Put_Line("Options:");
-	IO.Put_Line("help      :" & opts.help'Img);
-	IO.Put_Line("verbose   :" & opts.verbose'Img);
-	IO.Put_Line("csv-folder:" & opts.csv_folder_flag'Img & " / " & To_String(opts.csv_folder));
-	IO.Put_Line("output    :" & opts.output_flag'Img     & " / " & To_String(opts.output));
+	print_options(opts);
 end scrape_electricity_per_day_vattenfall;
