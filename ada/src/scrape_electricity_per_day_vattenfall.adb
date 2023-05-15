@@ -14,7 +14,7 @@
 --    - [x] split options into name, value.
 --    - [x] collect options in a record.
 --    - [x] collect positional arguments in a vector.
---    - [x] somehow change usage of 'Positional_Arguments.Vector' to 'Positional_Arguments'
+--    - [x] change usage of 'Positional_Arguments.Vector' to 'Positional_Arguments' via subtype
 --  - [x] Message output
 --    - [x] error.
 --    - [x] warning.
@@ -87,14 +87,16 @@ procedure scrape_electricity_per_day_vattenfall is
 	--
 	-- Positional arguments:
 	--
-	package Positional_Arguments is new Ada.Containers.Vectors(Index_Type => Natural, Element_Type => Unbounded_String);
+	package Positional_Arguments_Vector is new Ada.Containers.Vectors(Index_Type => Natural, Element_Type => Unbounded_String);
 
-	function has_paths(args: in Positional_Arguments.Vector) return Boolean is
+	subtype Positional_Arguments is Positional_Arguments_Vector.Vector;
+
+	function has_paths(args: in Positional_Arguments) return Boolean is
 	begin
 		return args.Length > 0;
 	end has_paths;
 
-	function multiple_paths(args: in Positional_Arguments.Vector) return Boolean is
+	function multiple_paths(args: in Positional_Arguments) return Boolean is
 	begin
 		return args.Length > 1;
 	end multiple_paths;
@@ -200,7 +202,7 @@ procedure scrape_electricity_per_day_vattenfall is
 		IO.Put_Line("- output    :" & has_output(opts)'Img     & " / " & To_String(opts.output));
 	end print_options;
 
-	procedure print_arguments(args: in Positional_Arguments.Vector) is
+	procedure print_arguments(args: in Positional_Arguments) is
 	begin
 		IO.Put_Line("Positional arguments:");
 		for arg of args loop
@@ -249,7 +251,7 @@ procedure scrape_electricity_per_day_vattenfall is
 		return 0;
 	end scrape_and_report_wildcard;
 
-	procedure scrape_and_report(opts: in Options; args: in Positional_Arguments.Vector; output: in IO.File_Type ) is
+	procedure scrape_and_report(opts: in Options; args: in Positional_Arguments; output: in IO.File_Type ) is
 		count: Natural := 0;
 	begin
 		for path of args loop
@@ -295,7 +297,7 @@ procedure scrape_electricity_per_day_vattenfall is
 	-- Main block:
 	--
 	opts : Options;
-	args : Positional_Arguments.Vector;
+	args : Positional_Arguments;
 
 begin
 	-- print_command;
