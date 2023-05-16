@@ -202,13 +202,7 @@ procedure scrape_electricity_per_day_vattenfall is
 	function remove(text: in String; srch: in String) return String is
 		pos: Natural;
 	begin
-		-- Prevent 'range check failed':
-		if text'Length <= srch'Length then
-			return text;
-		end if;
-
 		pos := Index(text, srch);
-
 		return (
 			if pos > 0
 				then Delete(text, pos, pos + srch'Length - 1)
