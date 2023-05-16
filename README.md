@@ -127,7 +127,7 @@ Datum;Levering [Wh];Teruglevering [Wh];Netto Verbruik [Wh];Vaste Kosten;Variable
 08-05-23;3,985;-13,862;-9,877;-0.49;-1,66;-2,15
 ```
 
-## The script
+## The Python script
 
 Currently the [script](script/scrape_electricity_per_day_vattenfall.py) assumes the desired information starts on `line_month` (27). If needed, the scraping process can be made a bit more resilient. For now, let's hope the presentation does not often change.
 
@@ -149,3 +149,7 @@ optional arguments:
   --csv-folder csv  folder to write csv files to (default: None)
   --output output   output file in csv format (default: None)
 ```
+
+## Ada version of the Python script (WIP)
+
+As an excercise to learn Ada, I am writing an [Ada version](ada) of above Python script.
