@@ -631,7 +631,7 @@ procedure scrape_electricity_per_day_vattenfall is
 		end loop;
 
 		if count > 0 then
-			log(LOG_PROCESSED, opts, "{count} {files} processed."); -- .format(count=count, files=plural('file', count)))
+			log(LOG_PROCESSED, opts, to_string(count) & " " & plural("file", count) & " processed.");
 		else
 			warning("Warning: not a single file processed.");
 		end if;
