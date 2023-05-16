@@ -637,7 +637,7 @@ procedure scrape_electricity_per_day_vattenfall is
 
 	procedure print_help is
 		usage : constant String := CR & LF &
-			"Usage: scrape_electricity_per_day_vattenfall [-h] [-v] [--csv-folder csv] [--output output] paths [paths ...]" & CR & LF &
+			"Usage: scrape_electricity_per_day_vattenfall [-h] [-v] [--csv-folder=csv] [--output=output] paths [paths ...]" & CR & LF &
 			CR & LF &
 			"Scrape given text file(s) with Vattenfall daily electricity usage and create file(s) in csv format. Single file output is to stdout default and can be directed to a file using option '--output'. When multiple files are specified, output is to a file of the same name with the extension replaced with '.csv'. Multiple file output can be directed to a folder using option '--csv-folder'." & CR & LF &
 			CR & LF &
