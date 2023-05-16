@@ -34,11 +34,10 @@
 --  - [ ] Determine days in month, days_in_month(yyyy, mm); requires calendar of some sort.
 --  - [ ] Find equivalent of Python 'with' statement, or 'scoped_file' type.
 --  - [ ] Traverse folder
---  - [ ] Expand wildcards
+--  - [x] Expand wildcards: appears to be performed by command line module, Ada.Command_Line.
 
 -- TODO file: scoped file
 -- TODO file: traverse folder
--- TODO file: traverse wildcards
 
 -- with Ada.Finalization;
 
@@ -608,9 +607,10 @@ procedure scrape_electricity_per_day_vattenfall is
 		return 0; -- TODO file: traverse folder, scan and report
 	end scrape_and_report_folder;
 
+	-- Wildcards are handled by the command line module, it appears: no implementation required.
 	function scrape_and_report_wildcard(opts: in Options; path: in Unbounded_String) return Natural is
 	begin
-		return 0; -- TODO file: traverse wildcard, scan and report
+		return 0;
 	end scrape_and_report_wildcard;
 
 	procedure scrape_and_report(opts: in Options; args: in Positional_Arguments; output: in IO.File_Type ) is
