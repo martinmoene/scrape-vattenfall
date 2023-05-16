@@ -527,6 +527,8 @@ procedure scrape_electricity_per_day_vattenfall is
 	begin
 		log(LOG_FILENAME, opts, To_String(src) & ":");
 
+		reset;
+
 		IO.Open(file, IO.In_File, To_String(src));
 		loop
 			exit when IO.End_Of_File(file);
