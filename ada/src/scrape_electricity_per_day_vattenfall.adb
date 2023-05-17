@@ -31,10 +31,11 @@
 --    - [x] get basename.
 --    - [x] replace extension.
 --    - [ ] join path elements.
---  - [ ] Determine days in month, days_in_month(yyyy, mm); requires calendar of some sort.
+--  - [x] Determine days in month, days_in_month(yyyy, mm); requires calendar of some sort: use is_leap_year().
 --  - [x] Find equivalent of Python 'with' statement, or 'scoped_file' type.
 --  - [x] Traverse folder
 --  - [x] Expand wildcards: appears to be performed by command line module, Ada.Command_Line.
+--  - [ ] With multiple files (or combinations), do not use stdoutput for the files, but write to properly named files instead.
 
 with scoped; use scoped;
 
@@ -289,6 +290,20 @@ procedure scrape_electricity_per_day_vattenfall is
 						split_backward(To_String(text), "/").b), "\\").b), ".").a;
 	end os_path_basename;
 
+	-- Python:
+	-- os.path.join(path, *paths)
+	--
+	-- Join one or more path components intelligently.
+	-- The return value is the concatenation of path and any members of *paths with exactly one directory separator (os.sep)
+	-- following each non-empty part except the last, meaning that the result will only end in a separator if the last part is empty.
+	-- If a component is an absolute path, all previous components are thrown away and joining continues from the absolute path component.
+	--
+	-- On Windows, the drive letter is not reset when an absolute path component (e.g., r'\foo') is encountered.
+	-- If a component contains a drive letter, all previous components are thrown away and the drive letter is reset.
+	-- Note that since there is a current directory for each drive, os.path.join("c:", "foo") represents a path relative to
+	-- the current directory on drive C: (c:foo), not c:\foo.
+	-- Changed in version 3.6: Accepts a path-like object for path and paths.
+
 	function os_path_join(head: in Unbounded_String; tail: in Unbounded_String) return Unbounded_String is
 	begin
 		return head & To_Unbounded_String("/") & tail; -- TODO file/path: join
@@ -479,10 +494,20 @@ procedure scrape_electricity_per_day_vattenfall is
 		return To_Unbounded_String(to_string(day) & "-" & to_string(month) & "-" & to_string(year));
 	end to_date;
 
-	function days_in_month(year: in Positive; month: in Positive) return Positive is
+	function is_leap_year(year: Positive) return Boolean is
 	begin
-		return 31; -- TODO calendar: days in month
-    --  return calendar.monthrange(year, month)[1]
+		-- See https://rosettacode.org/wiki/Leap_year#Ada.
+		return (year rem 4 = 0) and then ((year rem 16 = 0) or else (year rem 100 /= 0));
+	end;
+
+	function days_in_month(year: in Positive; month: in Positive) return Natural is
+	begin
+		case month is
+				when 1 | 3 | 5 | 7 | 8 | 10 | 12 => return 31;
+				when 4 | 6 | 9 | 11              => return 30;
+				when 2 => return (if is_leap_year(year) then 29 else 28);
+				when others => return 0;
+		end case;
 	end days_in_month;
 
 	type YearMonth is record
@@ -656,6 +681,7 @@ procedure scrape_electricity_per_day_vattenfall is
 		return 0;
 	end scrape_and_report_wildcard;
 
+	-- TODO file/path: with multiple files (via wild cards or completely specified), write to file instead of stdout.
 	procedure scrape_and_report(opts: in Options; args: in Positional_Arguments; output: in IO.File_Type ) is
 		count: Natural := 0;
 	begin
