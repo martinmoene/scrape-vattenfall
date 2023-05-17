@@ -28,19 +28,16 @@
 --  - [ ] Provide path and file operations:
 --    - [x] isfile().
 --    - [x] isdir().
---    - [ ] get basename.
---    - [ ] replace extension.
+--    - [x] get basename.
+--    - [x] replace extension.
 --    - [ ] join path elements.
 --  - [ ] Determine days in month, days_in_month(yyyy, mm); requires calendar of some sort.
 --  - [x] Find equivalent of Python 'with' statement, or 'scoped_file' type.
---  - [ ] Traverse folder
+--  - [x] Traverse folder
 --  - [x] Expand wildcards: appears to be performed by command line module, Ada.Command_Line.
-
--- TODO file: traverse folder
 
 with scoped; use scoped;
 
--- with Ada.Finalization;
 with Ada.Command_Line;
 
 with Ada.Directories;         use Ada.Directories;
@@ -284,15 +281,34 @@ procedure scrape_electricity_per_day_vattenfall is
 		return Exists(To_String(arg)) and then Kind (To_String(arg)) = Directory;
 	end os_path_isdir;
 
+	-- take last folder component (handle '/' and '\'), and remove extension (path/to/filename.ext => filename):
 	function os_path_basename(text: in Unbounded_String) return Unbounded_String is
 	begin
-		return text;	-- TODO file/path: basename
+		return split(To_String(
+						split_backward(To_String(
+						split_backward(To_String(text), "/").b), "\\").b), ".").a;
 	end os_path_basename;
 
 	function os_path_join(head: in Unbounded_String; tail: in Unbounded_String) return Unbounded_String is
 	begin
 		return head & To_Unbounded_String("/") & tail; -- TODO file/path: join
 	end os_path_join;
+
+	function os_listdir(folder: Unbounded_String) return Lines is
+		result : Lines;
+		Search : Search_Type;
+		Dir_Ent: Directory_Entry_Type;
+	begin
+		Start_Search(Search, To_String(folder), "");
+
+		while More_Entries(Search) loop
+			Get_Next_Entry(Search, Dir_Ent);
+			result.Append(To_Unbounded_String(Simple_Name(Dir_Ent)));
+		end loop;
+		End_Search(Search);
+
+		return result;
+	end os_listdir;
 
 	--
 	-- Main program:
@@ -553,8 +569,7 @@ procedure scrape_electricity_per_day_vattenfall is
 
 	function to_extension(path: in Unbounded_String; ext: in String) return Unbounded_String is
 	begin
-		return path & To_Unbounded_String(ext);	-- TODO file/path: extension
-		--  return os.path.splitext(path)[0] + ext;
+		return split_backward(To_String(path), ".").a & To_Unbounded_String(ext);
 	end to_extension;
 
 	function to_output_path(opts: in Options; path: in Unbounded_String) return  Unbounded_String is
@@ -563,7 +578,7 @@ procedure scrape_electricity_per_day_vattenfall is
 		-- - is not specified: replace extension '.txt'. with '.csv;
 		-- - is specified: replace extension '.txt'. with '.csv and replace folder with provided one.
 		if has_csv_folder(opts) then
-				return os_path_join(opts.csv_folder, to_extension(os_path_basename(path), ".csv"));
+				return os_path_join(opts.csv_folder, os_path_basename(path) & ".csv");
 		else
 				return to_extension(path, ".csv");
 		end if;
@@ -607,9 +622,32 @@ procedure scrape_electricity_per_day_vattenfall is
 		end if;
 	end scrape_and_report_file;
 
-	function scrape_and_report_folder(opts: in Options; path: in Unbounded_String) return Natural is
+	function scrape_and_report_folder(opts: in Options; folder: in Unbounded_String) return Natural is
+		count: Natural := 0;
+		path : Unbounded_String;
 	begin
-		return 0; -- TODO file: traverse folder, scan and report
+		if not has_csv_folder(opts) then
+			error("can only process folder when destination is specified via option '--csv-folder'.");
+		end if;
+
+		if folder = opts.csv_folder then
+			error("folder to process must differ from folder specified with option '--csv-folder', both are: '" & To_String(folder) & "'.");
+		end if;
+
+		count := 0;
+		for filename of os_listdir(folder) loop
+				path := os_path_join(folder, filename);
+				if os_path_isfile(path) then
+					log(LOG_PROGRESS, opts, "Creating '" & To_String(to_output_path(opts, path)) & "'");
+					declare
+						output: scoped_file;
+					begin
+						output.create(To_String(to_output_path(opts, path)));
+						count := count + report(opts, scrape(path, opts), output.file);
+					end;
+				end if;
+		end loop;
+		return count;
 	end scrape_and_report_folder;
 
 	-- Wildcards are handled by the command line module, it appears: no implementation required.
