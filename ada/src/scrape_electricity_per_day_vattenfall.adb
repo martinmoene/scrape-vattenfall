@@ -32,15 +32,15 @@
 --    - [ ] replace extension.
 --    - [ ] join path elements.
 --  - [ ] Determine days in month, days_in_month(yyyy, mm); requires calendar of some sort.
---  - [ ] Find equivalent of Python 'with' statement, or 'scoped_file' type.
+--  - [x] Find equivalent of Python 'with' statement, or 'scoped_file' type.
 --  - [ ] Traverse folder
 --  - [x] Expand wildcards: appears to be performed by command line module, Ada.Command_Line.
 
--- TODO file: scoped file
 -- TODO file: traverse folder
 
--- with Ada.Finalization;
+with scoped; use scoped;
 
+-- with Ada.Finalization;
 with Ada.Command_Line;
 
 with Ada.Directories;         use Ada.Directories;
@@ -60,6 +60,7 @@ with Ada.Containers;          use Ada.Containers;
 with Ada.Containers.Vectors;
 
 procedure scrape_electricity_per_day_vattenfall is
+
 	package CLI   renames Ada.Command_Line;
 	package IO    renames Ada.Text_IO;
 	package INTIO renames Ada.Integer_Text_IO;
@@ -519,7 +520,6 @@ procedure scrape_electricity_per_day_vattenfall is
 	end scrape_day;
 
 	function scrape(src: in Unbounded_String; opts: in Options) return Days is
-		file  : IO.File_Type;
 		line  : Unbounded_String;
 		month : YearMonth;
 		data  : Lines;
@@ -529,13 +529,16 @@ procedure scrape_electricity_per_day_vattenfall is
 
 		reset;
 
-		IO.Open(file, IO.In_File, To_String(src));
-		loop
-			exit when IO.End_Of_File(file);
-			UBSIO.Get_Line(file, line);
-			data.Append(line);
-		end loop;
-		IO.Close(file);
+		declare
+			input: scoped_file;
+		begin
+			input.open(To_String(src));
+			loop
+				exit when IO.End_Of_File(input.file);
+				UBSIO.Get_Line(input.file, line);
+				data.Append(line);
+			end loop;
+		end;
 
 		month := scrape_year_month_days(data);
 		log(LOG_PROGRESS, opts, "year:" & to_string(month.year) & " month:" & to_string(month.month) & " days:" & to_string(month.days));
@@ -703,12 +706,11 @@ begin
 		print_help;
 	else
 		declare
-			output: IO.File_Type;
+			output: scoped_file;
 		begin
 			if has_output(opts) then
-				IO.Create(output, IO.Out_File, To_String(opts.output));
-				scrape_and_report(opts, args, output);
-				IO.Close(output);
+				output.create(To_String(opts.output));
+				scrape_and_report(opts, args, output.file);
 			else
 				scrape_and_report(opts, args, IO.Standard_Output);
 			end if;
