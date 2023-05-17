@@ -560,36 +560,44 @@ procedure scrape_electricity_per_day_vattenfall is
     );
 	end scrape_day;
 
-	function scrape(src: in Unbounded_String; opts: in Options) return Days is
+	-- return a named file's content as Lines.
+	function read_file(src: in Unbounded_String) return Lines is
+		input : scoped_file;
 		line  : Unbounded_String;
+		result: Lines;
+	begin
+		input.open(To_String(src));
+		loop
+			exit when IO.End_Of_File(input.file);
+			UBSIO.Get_Line(input.file, line);
+			result.Append(line);
+		end loop;
+		return result;
+	end read_file;
+
+	-- return a file's scraped content as Days.
+	function scrape_content(data: in Lines; opts: in Options) return Days is
 		month : YearMonth;
-		data  : Lines;
 		result: Days;
 	begin
-		log(LOG_FILENAME, opts, To_String(src) & ":");
-
 		reset;
-
-		declare
-			input: scoped_file;
-		begin
-			input.open(To_String(src));
-			loop
-				exit when IO.End_Of_File(input.file);
-				UBSIO.Get_Line(input.file, line);
-				data.Append(line);
-			end loop;
-		end;
-
 		month := scrape_year_month_days(data);
 		log(LOG_PROGRESS, opts, "year:" & to_string(month.year) & " month:" & to_string(month.month) & " days:" & to_string(month.days));
 
-		for day in 1 .. month.days loop
+		for day in 1..month.days loop
 			-- eprint('Day: {}'.format(lines[day_index(day)]))
 			result.Append(scrape_day(data, day, month.month, month.year));
 			advance_day;
 		end loop;
 		return result;
+	end scrape_content;
+
+	-- return a named file's scraped content as Days.
+	function scrape(src: in Unbounded_String; opts: in Options) return Days is
+	begin
+		log(LOG_FILENAME, opts, To_String(src) & ":");
+
+		return scrape_content(read_file(src), opts);
 	end;
 
 	function to_extension(path: in Unbounded_String; ext: in String) return Unbounded_String is
