@@ -244,7 +244,7 @@ procedure scrape_electricity_per_day_vattenfall is
 
 	function plural(text: in String; count: in Natural) return String is
 	begin
-    return text & (if count > 1 then "s" else "");
+    return text & (if count = 1 then "" else "s");
 	end plural;
 
 	-- Format number without leading space.
@@ -630,9 +630,8 @@ procedure scrape_electricity_per_day_vattenfall is
 			end if;
 		end loop;
 
-		if count > 0 then
-			log(LOG_PROCESSED, opts, to_string(count) & " " & plural("file", count) & " processed.");
-		else
+		log(LOG_PROCESSED, opts, to_string(count) & " " & plural("file", count) & " processed.");
+		if count = 0 then
 			warning("Warning: not a single file processed.");
 		end if;
 	end scrape_and_report;
