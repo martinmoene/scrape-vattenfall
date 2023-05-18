@@ -37,6 +37,7 @@
 --  - [x] Expand wildcards: appears to be performed by command line module, Ada.Command_Line.
 --  - [ ] With multiple files (or combinations), do not use stdoutput for the files, but write to properly named files instead.
 
+with pair;
 with scoped; use scoped;
 
 with Ada.Command_Line;
@@ -95,10 +96,8 @@ procedure scrape_electricity_per_day_vattenfall is
 	--
 	-- Pair of unbounded strings to hold command line option/value pairs:
 	--
-	type String_Pair is record
-		a: Unbounded_String;
-		b: Unbounded_String;
-	end record;
+	package String_Pair_Type is new Pair (T => Unbounded_String, U => Unbounded_String);
+	subtype String_Pair is String_Pair_Type.Pair;
 
 	function make_pair(a: in String; b: in String) return String_Pair is
 	begin
@@ -223,24 +222,6 @@ procedure scrape_electricity_per_day_vattenfall is
 		return To_String(result);
 	end replace_chr;
 
-	--  function replace(text: in String; srch: in String; repl: in String) return String is
-	--  	pos: Natural;
-	--  	result: String(1..20);
-	--  begin
-	--  	IO.Put("REPLACE: " & text & " Index:" & Index(text, srch)'Img);
-
-	--  	pos := Index(text, srch);
-	--  	--  --  return (pos > 0 then Overwrite(text, Index(text, srch), repl) else text);
-	--  	if pos > 0 then
-	--  		result := Replace_Slice(text, pos, pos, repl);	-- Length(srch)
-	--  	else
-	--  		result := text;
-	--  	end if;
-	--  	IO.Put_Line(" result:" & result);
-	--  	return result;
-	--  	--  return text;	-- TODO string: replace(), solved via replace_chr() for now
-	--  end replace;
-
 	function plural(text: in String; count: in Natural) return String is
 	begin
     return text & (if count = 1 then "" else "s");
@@ -287,7 +268,7 @@ procedure scrape_electricity_per_day_vattenfall is
 	begin
 		return split(To_String(
 						split_backward(To_String(
-						split_backward(To_String(text), "/").b), "\\").b), ".").a;
+						split_backward(To_String(text), "/").rhs), "\\").rhs), ".").lhs;
 	end os_path_basename;
 
 	-- Python:
@@ -436,7 +417,7 @@ procedure scrape_electricity_per_day_vattenfall is
 	-- Take number at left, remove ',', changing from kWh to Wh ("6,505 kWh" => "6505"):
 	function to_Wh(text: Unbounded_String) return Unbounded_String is
 	begin
-		return To_Unbounded_String(remove(To_String(split(To_String(text), " ").a), ","));
+		return To_Unbounded_String(remove(To_String(split(To_String(text), " ").lhs), ","));
 	end to_Wh;
 
 	-- Take amount at right, replace ',' with '.' ("[1 mei ]€ 1,23" => 1.23):
@@ -449,7 +430,7 @@ procedure scrape_electricity_per_day_vattenfall is
 				return zero;
 		end if;
 
-		amount := split_backward(To_String(text), " ").b;
+		amount := split_backward(To_String(text), " ").rhs;
 
 		return (
 			if Length(amount) > 1
@@ -539,8 +520,8 @@ procedure scrape_electricity_per_day_vattenfall is
 		mm   : Positive;
 	begin
 		month := split(To_String(data(month_index)), " ");
-		mm    := to_month_num(month.a);
-		yyyy  := to_integer(month.b);
+		mm    := to_month_num(month.lhs);
+		yyyy  := to_integer(month.rhs);
 
 		return (yyyy, mm, days_in_month(yyyy, mm));
 	end scrape_year_month_days;
@@ -602,7 +583,7 @@ procedure scrape_electricity_per_day_vattenfall is
 
 	function to_extension(path: in Unbounded_String; ext: in String) return Unbounded_String is
 	begin
-		return split_backward(To_String(path), ".").a & To_Unbounded_String(ext);
+		return split_backward(To_String(path), ".").lhs & To_Unbounded_String(ext);
 	end to_extension;
 
 	function to_output_path(opts: in Options; path: in Unbounded_String) return  Unbounded_String is
@@ -744,8 +725,8 @@ begin
 		declare
 			arg      : constant String           := CLI.Argument(i);
 			opt      : constant String_Pair      := make_option_pair(arg);
-			opt_name : constant String           := To_String(opt.a);
-			opt_value: constant Unbounded_String := opt.b;
+			opt_name : constant String           := To_String(opt.lhs);
+			opt_value: constant Unbounded_String := opt.rhs;
 		begin
 			-- print_list_num(i);
 			if starts_with(arg, "-") then

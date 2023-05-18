@@ -9,7 +9,7 @@
 PROGRAM = scrape_electricity_per_day_vattenfall
 PROJECT = ${PROGRAM}.gpr
 
-MODULES = scoped.adb
+MODULES = pair.ads pair.adb scoped.ads scoped.adb
 
 VPATH = sdb:../src exe:../bin
 
