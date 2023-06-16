@@ -67,17 +67,17 @@ offset_totalekosten    = (0 ,  0)
 # Vattenfall: Usage information for a single day to scrape from input file (at day_line(day)):
 #
 # A. Case without teruglevering:
-# Ndx | Line contents       | Information
-#  0  | 1 januari € 2,75    | [date] {Totale kosten}
-#  1  | Variabele kosten    |
-#  2  | 8,838 kWh           | {Levering}
-#  3  | € 3,24              | {Variable Kosten}
-#  4  | Vaste kosten        |
-#  5  | 1 dg                |
-#  6  | € -0,49             | {Vaste kosten}
+# Ndx | Line contents     E | G                | Information
+#  0  | 1 januari € 2,75    | 1 januari € 6,48 | [date] {Totale kosten}
+#  1  | Variabele kosten    | .                |
+#  2  | 8,838 kWh           | 3,16 M³          | {Levering}
+#  3  | € 3,24              | € 5,63           | {Variable Kosten}
+#  4  | Vaste kosten        | .                |
+#  5  | 1 dg                | .                |
+#  6  | € -0,49             | € 0,85           | {Vaste kosten}
 #
 # B. Case with teruglevering:
-# Ndx | Line contents       | Information
+# Ndx | Line contents     E | Information
 #  0  | 8 mei € -2,15       | [date] {Totale kosten}
 #  1  | Stroom              |
 #  2  | 3,985 kWh           | {Levering}
@@ -144,7 +144,7 @@ def plural(text, count):
 def reset():
     """Reset state for processing the next file"""
     global line_day_current
-    line_day_current  = line_day_first
+    line_day_current = line_day_first
 
 def probe_teruglevering(lines, day):
     """Probe if currently selected day contains 'Terugleveren'."""
@@ -202,8 +202,8 @@ def to_date(year, month, day):
     return '{day}-{month}-{year}'.format(day=day, month=month, year=year)
 
 def to_Wh(text):
-    """Return number of Wh without separator."""
-    return text.split()[0].replace(',', '')
+    """Return number of Wh as integer."""
+    return round(1000 * float(text.split()[0].replace(',', '.')))
 
 def to_money(text):
     """Return amount with ',' replaced by '.', like '-1.23'."""
@@ -322,6 +322,16 @@ def scrape_and_report_file(path, args, output):
 
 def scrape_and_report_folder(folder, args):
     """Scrape text files in folder' and create csv files of them."""
+
+    # TODO implement sanity checks
+    # if not has_csv_folder(opts) then
+    #     error("can only process folder when destination is specified via option '--csv-folder'.");
+    # end if;
+
+    # if folder = opts.csv_folder then
+    #     error("folder to process must differ from folder specified with option '--csv-folder', both are: '" & To_String(folder) & "'.");
+    # end if;
+
     count = 0
     for filename in os.listdir(folder):
         path = os.path.join(folder, filename)
