@@ -222,6 +222,11 @@ procedure scrape_electricity_per_day_vattenfall is
 		return To_String(result);
 	end replace_chr;
 
+	function replace_chr(text: in Unbounded_String; srch: in String; repl: in Character) return String is
+	begin
+		return replace_chr(To_String(text), srch, repl);
+	end replace_chr;
+
 	function plural(text: in String; count: in Natural) return String is
 	begin
     return text & (if count = 1 then "" else "s");
@@ -239,6 +244,16 @@ procedure scrape_electricity_per_day_vattenfall is
 	begin
 		return Integer'Value(To_String(text));
 	end to_integer;
+
+function to_real(text: in String) return Float is
+	begin
+		return Float'Value(text);
+	end to_real;
+
+function to_real(text: in Unbounded_String) return Float is
+	begin
+		return to_real(To_String(text));
+	end to_real;
 
 	--
 	-- Path operations:
@@ -414,10 +429,15 @@ procedure scrape_electricity_per_day_vattenfall is
 		line_day_current := line_day_current + line_day_count(with_teruglevering);
 	end;
 
-	-- Take number at left, remove ',', changing from kWh to Wh ("6,505 kWh" => "6505"):
+	-- Take number at left, replace ',' with '.', times 1000, changing from kWh to Wh ("6,505 kWh" => "6505"):
 	function to_Wh(text: Unbounded_String) return Unbounded_String is
 	begin
-		return To_Unbounded_String(remove(To_String(split(To_String(text), " ").lhs), ","));
+		-- omit leading space via to_string():
+		return To_Unbounded_String(
+			to_string(Integer(Float'Rounding(
+					1000.0 * to_real(replace_chr(split(To_String(text), " ").lhs, ",", '.'))
+			)))
+		);
 	end to_Wh;
 
 	-- Take amount at right, replace ',' with '.' ("[1 mei ]€ 1,23" => 1.23):
