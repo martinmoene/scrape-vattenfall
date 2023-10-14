@@ -35,6 +35,7 @@ import os
 import sys
 import argparse
 import calendar
+import datetime
 
 EXIT_SUCCESS = 0
 EXIT_FAILURE = 1
@@ -261,6 +262,13 @@ def is_after_202308(year, month):
 def range_days(year, month, days):
     return range(days, 0, -1) if is_after_202308(year, month) else range(1, days + 1)
 
+def to_datetime(entry):
+    # date[0]: 16-9-2023
+    return datetime.datetime.strptime(entry[0], '%d-%m-%Y')
+
+def sorted_increasing(data):
+    return sorted(data, key=to_datetime, reverse=False)
+
 def scrape(src, args):
     """Scrape usage information from text file '{}'."""
     log(LOG_PROGRESS, args, scrape.__doc__.format(src))
@@ -282,7 +290,7 @@ def scrape(src, args):
         result.append(scrape_day(lines, day, month, year))
         advance_day()
 
-    return result
+    return sorted_increasing(result)
 
 def report_header(args, output):
     """Report header."""
