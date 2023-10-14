@@ -190,7 +190,7 @@ def scrape_year_month_days(lines):
     # eprint(lines[month_index()].split())
     month, year = lines[month_index()].split()
     yyyy = int(year)
-    mm   = months.index(month)
+    mm   = months.index(month.capitalize())
     return (yyyy, mm, days_in_month(yyyy, mm))
 
 def scrape_day_datum(lines, day):
@@ -255,6 +255,12 @@ def scrape_day(lines, day, month, year):
         scrape_day_totalelekosten(lines, day),
     )
 
+def is_after_202308(year, month):
+    return year >= 2023 and month > 8
+
+def range_days(year, month, days):
+    return range(days, 0, -1) if is_after_202308(year, month) else range(1, days + 1)
+
 def scrape(src, args):
     """Scrape usage information from text file '{}'."""
     log(LOG_PROGRESS, args, scrape.__doc__.format(src))
@@ -271,7 +277,7 @@ def scrape(src, args):
     log(LOG_PROGRESS, args, 'year:{} month:{} days:{}'.format(year, month, days))
 
     result = []
-    for day in range(1, days + 1):
+    for day in range_days(year, month, days):
         # eprint('Day: {}'.format(lines[day_index(day)]))
         result.append(scrape_day(lines, day, month, year))
         advance_day()
