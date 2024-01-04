@@ -43,6 +43,7 @@ EXIT_FAILURE = 1
 LOG_FILENAME  = 1
 LOG_PROCESSED = 2
 LOG_PROGRESS  = 3
+LOG_DETAIL    = 4
 
 # Line information of text file copy-pasted from Vattenfal web page with a month's electricity usage per day:
 line_month        = 27      # Note: per 11-May-2023
@@ -286,7 +287,7 @@ def scrape(src, args):
 
     result = []
     for day in range_days(year, month, days):
-        # eprint('Day: {}'.format(lines[day_index(day)]))
+        log(LOG_DETAIL, args, 'Day: {}'.format(lines[day_index(day)]))
         result.append(scrape_day(lines, day, month, year))
         advance_day()
 
